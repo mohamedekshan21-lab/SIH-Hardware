@@ -1,0 +1,23 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment & local DB
+.env
+*.db
+*.sqlite3
+
+# Test & cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Data thumbnails & temporary output
+backend/data/thumbnails/*
+!backend/data/thumbnails/.gitkeep
+
+# IDEs
+.vscode/
+.idea/
+*.swp
