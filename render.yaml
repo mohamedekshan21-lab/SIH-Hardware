@@ -1,4 +1,4 @@
-# Render Blueprint Configuration for spectraguard
+# Render Blueprint Configuration for SIH-Hardware
 services:
   - type: web
     name: spectraguard
