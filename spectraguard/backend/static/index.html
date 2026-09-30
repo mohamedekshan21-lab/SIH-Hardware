@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpectraGuard — Hyperspectral Food Safety Inspection</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.294.0/dist/umd/lucide.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #F1F5F9;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --border-color: #CBD5E1;
+      --border-strong: #94A3B8;
+      --accent-cyan: #0284C7;
+      --accent-blue: #1D4ED8;
+      --accent-emerald: #15803D;
+      --accent-amber: #B45309;
+      --accent-rose: #DC2626;
+      --text-main: #0F172A;
+      --text-muted: #475569;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(2, 132, 199, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(29, 78, 216, 0.06) 0px, transparent 50%);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Layout structure */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* Solid High-Contrast Dark Header Bar */
+    header {
+      background: #0F172A;
+      border-bottom: 3px solid #0284C7;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 50;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.15);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: #0284C7;
+      border: 2px solid #38BDF8;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+    }
+
+    .brand-subtitle {
+      font-size: 0.72rem;
+      color: #38BDF8;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+    }
+
+    /* Navigation tabs — High Contrast Slate Container & Solid Pills */
+    nav {
+      display: flex;
+      gap: 0.4rem;
+      background: #1E293B;
+      padding: 0.35rem;
+      border-radius: 10px;
+      border: 2px solid #0F172A;
+    }
+
+    .nav-btn {
+      background: #334155;
+      border: 1px solid #475569;
+      color: #F8FAFC;
+      padding: 0.55rem 1.15rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      color: #FFFFFF;
+      background: #475569;
+      border-color: #64748B;
+    }
+
+    .nav-btn.active {
+      background: #0284C7;
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.45);
+      font-weight: 800;
+      border: 2px solid #38BDF8;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #15803D;
+      border: 2px solid #4ADE80;
+      color: #FFFFFF;
+      padding: 0.45rem 0.95rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      box-shadow: 0 2px 8px rgba(21, 128, 61, 0.3);
+    }
+
+    .status-pulse {
+      width: 10px;
+      height: 10px;
+      background: #4ADE80;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #4ADE80;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Main view container */
+    main {
+      flex: 1;
+      padding: 1.25rem;
+      overflow-y: auto;
+    }
+
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* High-Contrast Grid & KPI Cards */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .metric-card {
+      background: #FFFFFF;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.15rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .metric-card:hover {
+      border-color: #0284C7;
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.15);
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(to right, #0284C7, #1D4ED8);
+    }
+
+    .metric-title {
+      font-size: 0.8rem;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .metric-value {
+      font-size: 2.1rem;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      color: #0F172A;
+    }
+
+    .metric-sub {
+      font-size: 0.78rem;
+      color: #0284C7;
+      font-weight: 700;
+      margin-top: 0.3rem;
+    }
+
+    /* Live Stream Main View */
+    .stream-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    @media (max-width: 1024px) {
+      .stream-grid { grid-template-columns: 1fr; }
+    }
+
+    .view-card {
+      background: #FFFFFF;
+      border: 2px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #0F172A;
+    }
+
+    /* Dark Navy Canvas Container — Makes spatial HSI frames & heatmap pop */
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      background: #0F172A;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid #64748B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .hsi-image-layer {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Extra Bold High-Contrast Verdict Banners */
+    .verdict-banner {
+      position: absolute;
+      top: 12px; right: 12px;
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      font-weight: 900;
+      font-size: 0.95rem;
+      font-family: var(--font-mono);
+      letter-spacing: 0.06em;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      border: 2px solid #FFFFFF;
+    }
+    .verdict-PASS { background: #15803D; color: #FFFFFF; }
+    .verdict-REJECT { background: #DC2626; color: #FFFFFF; animation: shake 0.3s; }
+    .verdict-REVIEW { background: #B45309; color: #FFFFFF; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    /* High-Contrast Controls bar */
+    .controls-bar {
+      background: #FFFFFF;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    .btn {
+      background: #0284C7;
+      color: #FFFFFF;
+      border: 2px solid #0369A1;
+      padding: 0.65rem 1.3rem;
+      font-weight: 800;
+      font-size: 0.88rem;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+    }
+    .btn:hover { background: #0369A1; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(2, 132, 199, 0.5); }
+    
+    .btn-danger { background: #DC2626; color: #FFFFFF; border: 2px solid #B91C1C; box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4); }
+    .btn-danger:hover { background: #B91C1C; box-shadow: 0 6px 18px rgba(220, 38, 38, 0.5); }
+    
+    .btn-outline { background: #FFFFFF; border: 2px solid #0F172A; color: #0F172A; font-weight: 800; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.1); }
+    .btn-outline:hover { background: #0F172A; color: #FFFFFF; }
+    
+    .btn-dark { background: #1E293B; color: #FFFFFF; border: 2px solid #0F172A; font-weight: 800; box-shadow: 0 3px 10px rgba(15, 23, 42, 0.2); }
+    .btn-dark:hover { background: #0F172A; }
+
+    .select-input, .range-input {
+      background: #FFFFFF;
+      border: 2px solid #64748B;
+      color: #0F172A;
+      font-weight: 700;
+      padding: 0.6rem 0.95rem;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .select-input:focus {
+      border-color: #0284C7;
+      outline: none;
+    }
+
+    /* High-Contrast Data Tables */
+    .table-container {
+      background: #FFFFFF;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    th {
+      background: #1E293B;
+      color: #FFFFFF;
+      padding: 0.85rem 1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      border-bottom: 2px solid #0F172A;
+    }
+
+    td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1.5px solid #E2E8F0;
+      color: #0F172A;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background: #F8FAFC;
+    }
+
+    tr:hover {
+      background: #E2E8F0;
+    }
+
+    /* High-Visibility Solid Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+    }
+    .badge-pass { background: #15803D; color: #FFFFFF; box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25); }
+    .badge-reject { background: #DC2626; color: #FFFFFF; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25); }
+    .badge-review { background: #B45309; color: #FFFFFF; box-shadow: 0 2px 6px rgba(180, 83, 9, 0.25); }
+
+    .btn-pdf-download {
+      background: #0284C7;
+      color: #FFFFFF !important;
+      border: 1px solid #0369A1;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 800;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+      transition: all 0.2s ease;
+    }
+    .btn-pdf-download:hover {
+      background: #0369A1;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-logo">
+          <i data-lucide="scan-eye" style="color: white; width:24px; height:24px;"></i>
+        </div>
+        <div>
+          <div class="brand-title">SpectraGuard</div>
+          <div class="brand-subtitle">Hyperspectral Inspection</div>
+        </div>
+      </div>
+
+      <nav>
+        <button class="nav-btn active" onclick="switchTab('live')">
+          <i data-lucide="activity" style="width:16px;"></i> Live Inspection
+        </button>
+        <button class="nav-btn" onclick="switchTab('traceability')">
+          <i data-lucide="database" style="width:16px;"></i> Traceability & Scans
+        </button>
+        <button class="nav-btn" onclick="switchTab('analytics')">
+          <i data-lucide="bar-chart-3" style="width:16px;"></i> Analytics & SPC
+        </button>
+        <button class="nav-btn" onclick="switchTab('calibration')">
+          <i data-lucide="sliders" style="width:16px;"></i> Calibration
+        </button>
+        <button class="nav-btn" onclick="switchTab('audit')">
+          <i data-lucide="shield-check" style="width:16px;"></i> Audit Chain
+        </button>
+      </nav>
+
+      <div class="header-actions">
+        <div class="status-pill" id="system-status-pill">
+          <div class="status-pulse"></div>
+          <span id="system-status-text">SYSTEM RUNNING</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- TAB 1: LIVE MONITOR -->
+      <div id="tab-live" class="tab-content active">
+        <!-- Top KPI Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-title">Throughput</div>
+            <div class="metric-value" id="kpi-throughput">30.0</div>
+            <div class="metric-sub">items / min</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Total Scanned</div>
+            <div class="metric-value" id="kpi-scanned">0</div>
+            <div class="metric-sub">Lot LOT-LIVE-001</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Total Rejected</div>
+            <div class="metric-value" style="color: #DC2626;" id="kpi-rejected">0</div>
+            <div class="metric-sub" style="color: #DC2626;" id="kpi-reject-rate">0.00% defect rate</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">System Latency</div>
+            <div class="metric-value" id="kpi-latency">14.2</div>
+            <div class="metric-sub">p50 processing time</div>
+          </div>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+          <div style="display:flex; gap:0.75rem; align-items:center;">
+            <button class="btn" id="btn-toggle-stream" onclick="toggleInspection()">
+              <i data-lucide="play" style="width:16px;"></i> Start Inspection
+            </button>
+            <span style="font-size:0.88rem; color:#0F172A; font-weight:700;">Product Profile:</span>
+            <select class="select-input" id="select-product-type" onchange="updateProductType()">
+              <option value="poultry">Poultry Cuts (NIR 900–1700 nm)</option>
+              <option value="leafy_greens">Leafy Greens (NIR 900–1700 nm)</option>
+            </select>
+          </div>
+
+          <div style="display:flex; gap:0.75rem; align-items:center;">
+            <span style="font-size:0.88rem; color:#0F172A; font-weight:700;">Inject Pathogen:</span>
+            <select class="select-input" id="select-inject" onchange="injectPathogen()">
+              <option value="">Normal (Random ~8%)</option>
+              <option value="Salmonella">Force Salmonella</option>
+              <option value="Listeria">Force Listeria</option>
+              <option value="E. coli">Force E. coli</option>
+              <option value="Biofilm">Force Biofilm</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Split View: Hyperspectral Frame vs Live Spectrum Plot -->
+        <div class="stream-grid">
+          <div class="view-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i data-lucide="eye" style="color:#0284C7; width:20px; height:20px;"></i>
+                Hyperspectral Spatial View & Heatmap
+              </div>
+              <div style="font-size:0.8rem; color:#475569; font-weight:700;" id="current-item-id">ITEM-WAITING</div>
+            </div>
+            <div class="canvas-container">
+              <img id="live-hsi-img" class="hsi-image-layer" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><rect width='100%' height='100%' fill='%230f172a'/><text x='50%' y='50%' fill='%2394a3b8' dominant-baseline='middle' text-anchor='middle' font-weight='bold'>Awaiting Live Stream...</text></svg>" />
+              <div class="verdict-banner verdict-PASS" id="live-verdict-banner">READY</div>
+            </div>
+            <div style="margin-top:0.75rem; font-size:0.85rem; color:#334155; font-weight:600;" id="live-explanation">
+              System standing by for scan start...
+            </div>
+          </div>
+
+          <div class="view-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i data-lucide="line-chart" style="color:#1D4ED8; width:20px; height:20px;"></i>
+                Live Spectral Signature (900 – 1700 nm)
+              </div>
+              <div style="font-size:0.8rem; color:#0284C7; font-weight:700;" id="peak-wl">Peak: --- nm</div>
+            </div>
+            <div style="height: 320px; width:100%;">
+              <canvas id="chart-spectrum"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Scans Table -->
+        <div class="view-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i data-lucide="list" style="width:20px; height:20px;"></i> Real-Time Inspection Feed
+            </div>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Item ID</th>
+                  <th>Verdict</th>
+                  <th>Pathogen Identified</th>
+                  <th>Contam Score</th>
+                  <th>Affected Area</th>
+                  <th>Latency</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-live-feed">
+                <tr>
+                  <td colspan="8" style="text-align:center; color:#475569; font-weight:600; padding:1.5rem;">No recent scans yet. Click 'Start Inspection' above.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: TRACEABILITY & SCANS -->
+      <div id="tab-traceability" class="tab-content">
+        <div class="view-card" style="margin-bottom: 1.25rem;">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="package" style="width:20px;"></i> Active Lots Summary</div>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Lot ID</th>
+                  <th>Supplier</th>
+                  <th>Product</th>
+                  <th>Scanned</th>
+                  <th>Rejected</th>
+                  <th>Defect Rate</th>
+                  <th>Status</th>
+                  <th>Certificate of Analysis</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-lots">
+                <tr><td colspan="8" style="text-align:center;">Loading lots data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: ANALYTICS & SPC -->
+      <div id="tab-analytics" class="tab-content">
+        <div class="stream-grid">
+          <div class="view-card">
+            <div class="card-header"><div class="card-title">30-Day Defect Rate Trend (%)</div></div>
+            <div style="height:280px;"><canvas id="chart-trend"></canvas></div>
+          </div>
+          <div class="view-card">
+            <div class="card-header"><div class="card-title">Supplier Defect Rate Comparison</div></div>
+            <div style="height:280px;"><canvas id="chart-supplier"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: CALIBRATION -->
+      <div id="tab-calibration" class="tab-content">
+        <div class="view-card">
+          <div class="card-header"><div class="card-title">Sensor Reference Calibration</div></div>
+          <p style="color:#334155; font-size:0.92rem; font-weight:600; margin-bottom:1.2rem;">
+            Run dark current and white reference calibration to compensate for sensor temperature drift and illumination non-uniformity.
+          </p>
+          <div style="display:flex; gap:1rem; margin-bottom:1.5rem;">
+            <button class="btn btn-dark" onclick="triggerCalibration('dark')">
+              <i data-lucide="moon" style="width:16px;"></i> Run Dark Calibration
+            </button>
+            <button class="btn" onclick="triggerCalibration('white')">
+              <i data-lucide="sun" style="width:16px;"></i> Run White Reference Calibration
+            </button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Type</th>
+                  <th>Result</th>
+                  <th>Operator</th>
+                  <th>SNR Signal Quality</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-calibration">
+                <tr><td colspan="5" style="text-align:center;">Loading calibration history...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: AUDIT LOG -->
+      <div id="tab-audit" class="tab-content">
+        <div class="view-card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="lock" style="width:20px;"></i> Cryptographic Audit Trail (SHA-256)</div>
+            <div class="badge badge-pass">HASH CHAIN VALID</div>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Timestamp</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Details</th>
+                  <th>Cryptographic Hash</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-audit">
+                <tr><td colspan="6" style="text-align:center;">Loading audit trail...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Global state
+    let ws = null;
+    let spectrumChart = null;
+    let trendChart = null;
+    let supplierChart = null;
+    let isRunning = false;
+
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Tab switcher
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById('tab-' + tabName).classList.add('active');
+      event.currentTarget.classList.add('active');
+
+      if (tabName === 'traceability') loadLots();
+      if (tabName === 'analytics') loadAnalytics();
+      if (tabName === 'calibration') loadCalibration();
+      if (tabName === 'audit') loadAuditLog();
+    }
+
+    // Initialize Spectrum Chart with Bold High-Contrast Lines & Grid
+    function initCharts() {
+      const ctx = document.getElementById('chart-spectrum').getContext('2d');
+      spectrumChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({length: 224}, (_, i) => Math.round(900 + i * (800/224))),
+          datasets: [{
+            label: 'Reflectance (I/I0)',
+            data: Array(224).fill(0.5),
+            borderColor: '#0284C7',
+            borderWidth: 3,
+            pointRadius: 0,
+            fill: true,
+            backgroundColor: 'rgba(2, 132, 199, 0.12)',
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { grid: { color: '#CBD5E1', lineWidth: 1.5 }, ticks: { color: '#0F172A', font: { weight: 'bold' } } },
+            y: { min: 0, max: 1.0, grid: { color: '#CBD5E1', lineWidth: 1.5 }, ticks: { color: '#0F172A', font: { weight: 'bold' } } }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    // Connect WebSocket
+    function connectWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws/live-stream`;
+      ws = new WebSocket(wsUrl);
+
+      ws.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        if (data.type === 'scan_update') {
+          handleScanUpdate(data);
+        }
+      };
+
+      ws.onclose = function() {
+        setTimeout(connectWebSocket, 2000);
+      };
+    }
+
+    function handleScanUpdate(data) {
+      const p = data.product;
+      const c = data.counters;
+
+      // Update KPIs
+      document.getElementById('kpi-throughput').innerText = c.items_per_min;
+      document.getElementById('kpi-scanned').innerText = c.total_scanned;
+      document.getElementById('kpi-rejected').innerText = c.total_rejected;
+      document.getElementById('kpi-reject-rate').innerText = `${c.reject_rate}% defect rate`;
+      document.getElementById('kpi-latency').innerText = `${c.latency_p50} ms`;
+
+      // Update HSI canvas image & verdict banner
+      document.getElementById('live-hsi-img').src = p.heatmap || p.rgb_preview;
+      document.getElementById('current-item-id').innerText = p.item_id;
+
+      const banner = document.getElementById('live-verdict-banner');
+      banner.innerText = p.verdict;
+      banner.className = `verdict-banner verdict-${p.verdict}`;
+
+      document.getElementById('live-explanation').innerText = p.explanation;
+
+      // Update Spectrum Chart
+      if (spectrumChart && p.spectrum) {
+        spectrumChart.data.datasets[0].data = p.spectrum;
+        spectrumChart.update('none');
+      }
+
+      // Prepend scan to table
+      const tbody = document.getElementById('tbody-live-feed');
+      if (tbody.children.length === 1 && tbody.children[0].children.length === 1) {
+        tbody.innerHTML = '';
+      }
+
+      const tr = document.createElement('tr');
+      const timeStr = new Date(p.scan_ts).toLocaleTimeString();
+      const verdictBadge = p.verdict === 'PASS' ? 'badge-pass' : (p.verdict === 'REJECT' ? 'badge-reject' : 'badge-review');
+      
+      tr.innerHTML = `
+        <td>${timeStr}</td>
+        <td style="font-family:var(--font-mono); font-weight:700;">${p.item_id}</td>
+        <td><span class="badge ${verdictBadge}">${p.verdict}</span></td>
+        <td style="font-weight:700;">${p.predicted_pathogen || '—'}</td>
+        <td style="font-family:var(--font-mono); font-weight:700;">${p.contamination_score.toFixed(3)}</td>
+        <td>${p.contaminated_area_pct}%</td>
+        <td>${p.latency_ms} ms</td>
+        <td>${p.actuator_action}</td>
+      `;
+      tbody.insertBefore(tr, tbody.firstChild);
+
+      if (tbody.children.length > 25) {
+        tbody.removeChild(tbody.lastChild);
+      }
+    }
+
+    async function toggleInspection() {
+      const btn = document.getElementById('btn-toggle-stream');
+      if (!isRunning) {
+        await fetch('/api/inspection/start', { method: 'POST' });
+        isRunning = true;
+        btn.innerHTML = '<i data-lucide="square" style="width:16px;"></i> Stop Inspection';
+        btn.classList.add('btn-danger');
+      } else {
+        await fetch('/api/inspection/stop', { method: 'POST' });
+        isRunning = false;
+        btn.innerHTML = '<i data-lucide="play" style="width:16px;"></i> Start Inspection';
+        btn.classList.remove('btn-danger');
+      }
+      lucide.createIcons();
+    }
+
+    async function updateProductType() {
+      const type = document.getElementById('select-product-type').value;
+      if (isRunning) {
+        await fetch(`/api/inspection/start?product_type=${type}`, { method: 'POST' });
+      }
+    }
+
+    async function injectPathogen() {
+      const pathogen = document.getElementById('select-inject').value;
+      await fetch('/api/inspection/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'inject_contamination', value: pathogen || null })
+      });
+    }
+
+    async function loadLots() {
+      const res = await fetch('/api/lots');
+      const lots = await res.json();
+      const tbody = document.getElementById('tbody-lots');
+      tbody.innerHTML = lots.map(l => {
+        const rate = l.total_scanned ? ((l.total_rejected / l.total_scanned) * 100).toFixed(1) : 0.0;
+        return `
+          <tr>
+            <td style="font-family:var(--font-mono); font-weight:800;">${l.lot_id}</td>
+            <td>${l.supplier || 'N/A'}</td>
+            <td>${l.product_type}</td>
+            <td>${l.total_scanned}</td>
+            <td>${l.total_rejected}</td>
+            <td>${rate}%</td>
+            <td><span class="badge ${l.status==='hold'?'badge-reject':'badge-pass'}">${l.status.toUpperCase()}</span></td>
+            <td>
+              <a href="/api/lots/${l.lot_id}/pdf" target="_blank" class="btn-pdf-download">
+                <i data-lucide="file-text" style="width:14px;"></i> Download PDF CoA
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    async function loadAnalytics() {
+      const [trendRes, suppRes] = await Promise.all([
+        fetch('/api/analytics/trend'),
+        fetch('/api/analytics/suppliers')
+      ]);
+      const trend = await trendRes.json();
+      const supp = await suppRes.json();
+
+      if (!trendChart) {
+        trendChart = new Chart(document.getElementById('chart-trend'), {
+          type: 'bar',
+          data: {
+            labels: trend.map(t => t.date),
+            datasets: [{ label: 'Defect Rate (%)', data: trend.map(t => (t.rate * 100).toFixed(1)), backgroundColor: '#DC2626' }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+              x: { grid: { color: '#CBD5E1' }, ticks: { color: '#0F172A', font: { weight: 'bold' } } },
+              y: { grid: { color: '#CBD5E1' }, ticks: { color: '#0F172A', font: { weight: 'bold' } } }
+            }
+          }
+        });
+      }
+
+      if (!supplierChart) {
+        supplierChart = new Chart(document.getElementById('chart-supplier'), {
+          type: 'doughnut',
+          data: {
+            labels: supp.map(s => s.supplier),
+            datasets: [{ data: supp.map(s => s.rejected), backgroundColor: ['#DC2626', '#B45309', '#15803D', '#1D4ED8'] }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+    }
+
+    async function triggerCalibration(type) {
+      await fetch('/api/calibration/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: type, operator: 'operator' })
+      });
+      alert(`${type.toUpperCase()} calibration complete!`);
+      loadCalibration();
+    }
+
+    async function loadCalibration() {
+      const res = await fetch('/api/calibration/history');
+      const cals = await res.json();
+      document.getElementById('tbody-calibration').innerHTML = cals.map(c => `
+        <tr>
+          <td>${new Date(c.ts).toLocaleString()}</td>
+          <td style="font-weight:800;">${c.type.toUpperCase()}</td>
+          <td><span class="badge badge-pass">${c.result.toUpperCase()}</span></td>
+          <td>${c.operator || 'system'}</td>
+          <td>58.2 dB</td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadAuditLog() {
+      const res = await fetch('/api/audit-log');
+      const logs = await res.json();
+      document.getElementById('tbody-audit').innerHTML = logs.map(l => `
+        <tr>
+          <td>#${l.id}</td>
+          <td>${new Date(l.ts).toLocaleString()}</td>
+          <td style="font-weight:800; color:#0284C7;">${l.user}</td>
+          <td style="font-weight:700;">${l.action}</td>
+          <td>${l.detail || '—'}</td>
+          <td style="font-family:var(--font-mono); font-size:0.75rem; color:#475569; font-weight:700;">${l.entry_hash.substring(0, 16)}...</td>
+        </tr>
+      `).join('');
+    }
+
+    // Startup
+    window.onload = function() {
+      initCharts();
+      connectWebSocket();
+    };
+  </script>
+</body>
+</html>

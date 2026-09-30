@@ -1,0 +1,87 @@
+{
+  "accuracy": 1.0,
+  "sensitivity": 1.0,
+  "specificity": 1.0,
+  "f1_macro": 1.0,
+  "fnr": 0.0,
+  "per_class": {
+    "Healthy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 572
+    },
+    "Salmonella": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 6
+    },
+    "Listeria": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 6
+    },
+    "E. coli": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 9
+    },
+    "Biofilm": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 7
+    }
+  },
+  "confusion_matrix": [
+    [
+      572,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      6,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      6,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      9,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      7
+    ]
+  ],
+  "class_names": [
+    "Healthy",
+    "Salmonella",
+    "Listeria",
+    "E. coli",
+    "Biofilm"
+  ],
+  "n_train": 2400,
+  "n_test": 600,
+  "n_features": 103,
+  "train_time_s": 0.26
+}
